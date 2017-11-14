@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MicroContentTestHost</title>
+    <script type="application/javascript">
+        function getData() {
+            var data = {title: 'no data found'};
+            var url = window.location.href;
+            var regex = new RegExp('[?&]data(=([^&#]*)|&|#|$)');
+            var results = regex.exec(url);
+            if (results && results[2]) {
+                data = JSON.parse(decodeURIComponent(results[2].replace(/\+/g, ' ')));
+            }
+            return data;
+        }
+
+        function getViewerUrl() {
+            var viewerUrl = 'http://localhost:8080';
+            var url = window.location.href;
+            var regex = new RegExp('[?&]url(=([^&#]*)|&|#|$)');
+            var results = regex.exec(url);
+            if (results && results[2]) {
+                viewerUrl = decodeURIComponent(results[2].replace(/\+/g, ' '));
+            }
+            return viewerUrl;
+        }
+
+        function propagateLayoutChanges() {
+            // ignore
+        }
+
+        function sendXapiStatement() {
+            // ignore
+        }
+
+        function registerOnSubmitListener(listener) {
+            window.onSubmitListener = listener;
+        }
+
+        function setXapiObjectGetter(getter) {
+            // ignore
+        }
+
+        function getBoundingClientRect() {
+            return document.getElementById('container').getBoundingClientRect();
+        }
+
+    </script>
+    <script type="text/javascript" src="http://caja.appspot.com/caja.js"></script>
+</head>
+<body>
+<h1 id="title">As a convention we render the title attribute of your data here! (you dont seem to have one).</h1>
+<div id="container"></div>
+<button onclick="window.onSubmitListener()">Submit/Undo</button>
+<script type="application/javascript">
+    var url = getViewerUrl();
+    var data = getData();
+    if (typeof data.title !== 'undefined') {
+        document.getElementById('title').innerHTML = data.title
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/\'/g, '&#39;')
+            .replace(/\//g, '&#x2F;');
+    }
+    caja.initialize({
+        cajaServer: 'https://caja.appspot.com/',
+        debug: true
+    });
+    var uriPolicy = {
+        rewrite: function (uri) {
+            return '';
+        }
+    };
+    caja.load(document.getElementById('container'), uriPolicy, function (frame) {
+        frame.code(url, 'text/html')
+            .api(
+                {
+                    getData: getData,
+                    propagateLayoutChanges: propagateLayoutChanges,
+                    sendXapiStatement: sendXapiStatement,
+                    registerOnSubmitListener: registerOnSubmitListener,
+                    setXapiObjectGetter: setXapiObjectGetter,
+                    getBoundingClientRect: getBoundingClientRect
+                })
+            .run();
+    });
+</script>
+</body>
+</html>
