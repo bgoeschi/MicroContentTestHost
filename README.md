@@ -1,7 +1,7 @@
 # MicroContentTestHost
 
 ## What
-This is a simple sample host page to test MicroContentViewers.
+This is a simple sample host page to test [MicroContentViewers](https://microcontent.github.io/).
 You can provide data and the url to MicroContentViewer as query parameters.
 
 Examples: 
