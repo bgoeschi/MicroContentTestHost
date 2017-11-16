@@ -46,6 +46,20 @@
             return document.getElementById('container').getBoundingClientRect();
         }
 
+        function injectIframeWithSrc(containerClassName, src) {
+            const whitelist = ["https://www.youtube-nocookie.com/embed/", "https://player.vimeo.com/video/"];
+            if (typeof src === "string" && whitelist.findIndex(function (e) {
+                        return src.startsWith(e)
+                    }) !== -1) {
+                const container = document.getElementById('container').getElementsByClassName(containerClassName)[0];
+                if (container !== undefined) {
+                    const iframe = document.createElement("iframe");
+                    iframe.src = src;
+                    container.appendChild(iframe);
+                }
+            }
+        }
+
     </script>
     <script type="text/javascript" src="http://caja.appspot.com/caja.js"></script>
 </head>
@@ -58,34 +72,40 @@
     var data = getData();
     if (typeof data.title !== 'undefined') {
         document.getElementById('title').innerHTML = data.title
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/\"/g, '&quot;')
-            .replace(/\'/g, '&#39;')
-            .replace(/\//g, '&#x2F;');
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\"/g, '&quot;')
+                .replace(/\'/g, '&#39;')
+                .replace(/\//g, '&#x2F;');
     }
     caja.initialize({
         cajaServer: 'https://caja.appspot.com/',
         debug: true
     });
     var uriPolicy = {
-        rewrite: function (uri) {
-            return '';
+        imgRegex: (/\.(gif|jpg|jpeg|tiff|png|webp)$/i),
+        rewrite: function (uri, p1, p2, context) {
+            if (context.TYPE === "MARKUP" && context.XML_ATTR === "src" && context.XML_TAG === "img" && this.imgRegex.test(uri.toString())) {
+                return uri;
+            } else if (context.TYPE === "CSS" && context.CSS_PROP === "background-image" && this.imgRegex.test(uri.toString())) {
+                return uri;
+            }
         }
     };
     caja.load(document.getElementById('container'), uriPolicy, function (frame) {
         frame.code(url, 'text/html')
-            .api(
-                {
-                    getData: getData,
-                    propagateLayoutChanges: propagateLayoutChanges,
-                    sendXapiStatement: sendXapiStatement,
-                    registerOnSubmitListener: registerOnSubmitListener,
-                    setXapiObjectGetter: setXapiObjectGetter,
-                    getBoundingClientRect: getBoundingClientRect
-                })
-            .run();
+                .api(
+                        {
+                            getData: getData,
+                            propagateLayoutChanges: propagateLayoutChanges,
+                            sendXapiStatement: sendXapiStatement,
+                            registerOnSubmitListener: registerOnSubmitListener,
+                            setXapiObjectGetter: setXapiObjectGetter,
+                            getBoundingClientRect: getBoundingClientRect,
+                            injectIframeWithSrc: injectIframeWithSrc
+                        })
+                .run();
     });
 </script>
 </body>
